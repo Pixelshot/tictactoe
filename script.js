@@ -27,9 +27,9 @@ function startGame() {
 
 function turnClick(square) {
   // prevent player from targeting square that has been clicked
-  if (typeof origBoard[square.target.id === 'number']) {
+  if (typeof origBoard[square.target.id] === 'number') {
     turn(square.target.id, huPlayer);
-    if (!checkTie()) turn(bestSpot(), aiPlayer);
+    if (!checkWin(origBoard, huPlayer) && !checkTie()) turn(bestSpot(), aiPlayer);
   }
 }
 
@@ -73,7 +73,7 @@ function emptySquares() {
 }
 
 function bestSpot() {
-  return emptySquares()[0];
+  return minimax(origBoard, aiPlayer).index;
 }
 
 function checkTie() {
@@ -88,3 +88,51 @@ function checkTie() {
   return false;
 }
 // 4. Create an unbeatable opponent using Minimax Algorithm
+function minimax(newBoard, player) {
+  var availSpots = emptySquares(newBoard);
+
+  if (checkWin(newBoard, player)) {
+    return { score: -10 };
+  } else if (checkWin(newBoard, aiPlayer)){
+    return { score: 10 };
+  } else if (availSpots.length === 0) {
+    return { score: 0 };
+  }
+  var moves = [];
+  for (var i = 0; i < availSpots.length; i++) {
+    var move = {};
+    move.index = newBoard[availSpots[i]];
+    newBoard[availSpots[i]] = player;
+
+    if (player === aiPlayer) {
+      var result = minimax(newBoard, huPlayer);
+      move.score = result.score;
+    } else {
+      var result = minimax(newBoard, aiPlayer);
+      move.score = result.score;
+    }
+
+    newBoard[availSpots[i]] = move.index;
+    moves.push(move);
+  }
+
+  var bestMove;
+  if (player === aiPlayer) {
+      var bestScore = -10000;
+      for (var i = 0; i < moves.length; i++) {
+        if (moves[i].score > bestScore) {
+          bestScore = moves[i].score;
+          bestMove = i;
+        }
+      }
+  } else {
+    var bestScore = 10000;
+    for (var i = 0; i < moves.length; i++) {
+      if (moves[i].score < bestScore) {
+        bestScore = moves[i].score;
+        bestMove = i;
+      }
+    }
+  }
+  return moves[bestMove];
+}
